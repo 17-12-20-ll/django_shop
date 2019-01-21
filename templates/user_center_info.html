@@ -1,0 +1,64 @@
+{% extends 'base_main.html' %}
+{% block title %}
+天天生鲜-用户中心
+{% endblock %}
+{% block search %}
+<div class="search_bar clearfix">
+    <a href="{% url 'goods:index' %}" class="logo fl"><img src="/static/images/logo.png"></a>
+    <div class="sub_page_name fl">|&nbsp;&nbsp;&nbsp;&nbsp;用户中心</div>
+    <div class="search_con fr">
+        <input type="text" class="input_text fl" name="" placeholder="搜索商品">
+        <input type="button" class="input_btn fr" name="" value="搜索">
+    </div>
+</div>
+{% endblock %}
+{% block content %}
+<div class="main_con clearfix">
+    <div class="left_menu_con clearfix">
+        <h3>用户中心</h3>
+        {% include 'base_user.html' %}
+    </div>
+    <div class="right_content clearfix">
+        <div class="info_con clearfix">
+            <h3 class="common_title2">基本信息</h3>
+            <ul class="user_info_list">
+                <li><span>用户名：</span>{{user.username}}</li>
+                <li><span>联系方式：</span>{{user_address_info.0.signer_mobile}}</li>
+                <li><span>联系地址：</span>{{user_address_info.0.address}}</li>
+            </ul>
+        </div>
+
+        <h3 class="common_title2">猜你喜欢</h3>
+        <div class="has_view_list">
+            <ul class="goods_type_list clearfix">
+                {% for like in like_list %}
+                <li>
+                    <a href="{% url 'goods:detail' like.goods.id %}"><img src="/media/{{like.goods.goods_front_image}}"></a>
+                    <h4><a href="{% url 'goods:detail' like.goods.id %}">{{like.goods.name}}</a></h4>
+                    <div class="operate">
+                        <span class="prize">{{like.goods.shop_price}} 元</span>
+                        <span class="unit">{{like.goods.shop_price}} 元/500g</span>
+                    </div>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+
+        <h3 class="common_title2">最近浏览</h3>
+        <div class="has_view_list">
+            <ul class="goods_type_list clearfix">
+                {% for recent in recent_list %}
+                <li>
+                    <a href="{% url 'goods:detail' recent.goods.id %}"><img src="/media/{{recent.goods.goods_front_image}}"></a>
+                    <h4><a href="{% url 'goods:detail' recent.goods.id %}">{{recent.goods.name}}</a></h4>
+                    <div class="operate">
+                        <span class="prize">{{recent.goods.shop_price}} 元</span>
+                        <span class="unit">{{recent.goods.shop_price}} 元/500g</span>
+                    </div>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}

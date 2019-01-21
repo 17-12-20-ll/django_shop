@@ -1,0 +1,157 @@
+{% extends 'base_main.html' %}
+{% block title %}
+天天生鲜-购物车
+{% endblock %}
+	{% block content %}
+	<div class="total_count">全部商品<em>0</em>件</div>
+	<ul class="cart_list_th clearfix">
+		<li class="col01">商品名称</li>
+		<li class="col02">商品单位</li>
+		<li class="col03">商品价格</li>
+		<li class="col04">数量</li>
+		<li class="col05">小计</li>
+		<li class="col06">操作</li>
+	</ul>
+{% for r in result %}
+	<ul class="cart_list_td clearfix" id="goods_{{r.0.id}}">
+		<li class="col01"><input id="check_box_{{r.0.id}}" name="checkbox" onclick="change_check({{r.0.id}})" type="checkbox" {% if r.2 %}checked="checked"{% endif %}></li>
+		<li class="col02"><img src="/media/{{r.0.goods_front_image}}"></li>
+		<li class="col03">{{r.0.name}}<br><em>{{r.0.shop_price}}元/500g</em></li>
+		<li class="col04">500g</li>
+		<li class="col05" id="col05_{{r.0.id}}">{{r.0.shop_price}}元</li>
+		<li class="col06">
+			<div class="num_add">
+				<a href="javascript:;" class="add fl" onclick="add_cart({{r.0.id}});">+</a>
+				<input type="text" class="num_show fl" id="num_show_{{r.0.id}}" value="{{r.1}}">
+				<a href="javascript:;" class="minus fl" onclick="sub_cart({{r.0.id}});">-</a>
+			</div>
+		</li>
+		<li class="col07" id="col07_{{r.0.id}}">{{r.3}}元</li>
+		<li class="col08"><a href="javascript:;" onclick="del_cart({{r.0.id}})">删除</a></li>
+	</ul>
+{% endfor %}
+	<ul class="settlements">
+		<li class="col01"><input type="checkbox" name="" checked="" id="allSelect" onclick="allSelect()" /></li>
+		<li class="col02">全选</li>
+		<li class="col03">合计(不含运费)：<span>¥</span><em></em><br>共计<b></b>件商品</li>
+		<li class="col04"><a href="{% url 'order:place_order' %}">去结算</a></li>
+	</ul>
+{% csrf_token %}
+<script>
+
+
+function cart_num(){
+	$.get('/cart/cart_num/',function(data){
+            if(data.code == '200'){
+                $('#show_count').text(data.count)
+            }
+        })
+}
+
+//刷新价格/件数
+function cart_price(){
+	$.get('/cart/cart_price/',function(data){
+		if(data.code == '200'){
+			$('.total_count em').html(data.all_total)
+			$('.settlements .col03 em').html(data.all_price)
+			$('.settlements .col03 b').html(data.is_select_num)
+		}
+	})
+}
+cart_price()
+	function add_cart(id){
+		var num = $('#num_show_'+id).val()
+		var new_num = parseInt(num) + 1
+		$('#num_show_'+id).val(new_num)
+		change_cart(id,new_num)
+	}
+
+	function sub_cart(id){
+		var num = $('#num_show_'+id).val()
+		if(parseInt(num)>1){
+		var new_num = parseInt(num) - 1
+		$('#num_show_'+id).val(new_num)
+		change_cart(id,new_num)
+		}
+	}
+	//修改数量或选择状态
+
+	function change_cart(id,new_num){
+	var csrf = $('input[name="csrfmiddlewaretoken"]').val()
+		$.ajax({
+			url:'/cart/change_cart/',
+			type:'POST',
+			data:{'goods_id':id,'goods_num':new_num},
+			dataType:'json',
+			headers:{'X-CSRFToken':csrf},
+			success:function(data){
+				cart_price()
+				num = parseFloat($('#num_show_'+id).val())
+				price = parseFloat($('#col05_'+id).text())
+				small_total = num*price
+				$('#col07_'+id).html(small_total.toFixed(1)+'元')
+			},
+			error:function(data){
+
+			}
+		});
+	}
+	//修改选择状态
+	function change_check(id){
+	var check_flag= $("#check_box_"+id).prop('checked')  //获取checked的标识.
+	if (check_flag){
+		var flag_num = 1
+	}else{
+		var flag_num = 0
+	}
+	var csrf = $('input[name="csrfmiddlewaretoken"]').val()
+	$.ajax({
+		url:'/cart/change_cart/',
+		type:'POST',
+		data:{'goods_id':id,'goods_select':flag_num},
+		dataType:'json',
+		headers:{'X-CSRFToken':csrf},
+		success:function(data){
+			cart_price()
+		},
+		error:function(data){
+		}
+	})
+	}
+
+	// 购物车中商品全选反选
+function allSelect(){
+	$("input[name='checkbox']").each(function(){
+	if($(this).prop("checked"))
+	{
+		$(this).removeAttr("checked");
+	}
+	else
+	{
+		$(this).prop("checked","true");
+	}
+})
+}
+	//删除商品
+	function del_cart(id){
+		var csrf = $('input[name="csrfmiddlewaretoken"]').val()
+		$.ajax({
+			url:'/cart/del_cart/'+id+'/',
+			type:'POST',
+			dataType:'json',
+			headers:{'X-CSRFToken':csrf},
+			success:function(data){
+				//location.href='/cart/cart/'//刷新当前页面
+				//location.reload()//刷新当前页面
+				$('#goods_'+id).remove()
+				cart_price()
+				cart_num()
+			},
+			error:function(e){
+				alert('error')
+			}
+		})
+	}
+
+</script>
+{% endblock %}
